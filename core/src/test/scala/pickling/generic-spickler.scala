@@ -18,6 +18,9 @@ class CustomPersonXPickler(implicit val format: PickleFormat) extends SPickler[P
   }
 }
 
+case class MyKey(a: Int, b: String)
+case class MyValue(a: MyKey, b: Double)
+
 class GenericSpickler extends FunSuite {
   test("stack-overflow-pickle-unpickle") {
     def bar[T: SPickler: FastTypeTag](t: T) = t.pickle
@@ -29,6 +32,14 @@ class GenericSpickler extends FunSuite {
 
     val unbarred = unbar[PersonY](bar(p).value)
     assert(unbarred == p)
+  }
+
+  test("possible regression") {
+    val myKey = MyKey(1, "hi")
+    assert(myKey.pickle.unpickle[MyKey] == myKey)
+
+    val myValue = MyValue(myKey, 2.2)
+    assert(myValue.pickle.unpickle[MyValue] == myValue)
   }
 
   test("issue-4") {
